@@ -59,7 +59,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConsoleProgressReporter.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="..\..\..\..\Desktop\Program.cs">
+      <Link>Program.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

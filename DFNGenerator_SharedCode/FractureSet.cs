@@ -2858,7 +2858,8 @@ namespace DFNGenerator_SharedCode
         /// <summary>
         /// Get the mean propagation distance for fractures from another set propagating towards this set during a specified previous timestep M, subject to specified minimum cutoffs and a minimum nucleation distance from the nearest fracture of this set
         /// These values give the normalised cumulative lengths of all fractures which nucleate further than a specified distance from the nearest fracture of this set, and which are longer than the cutoffs
-        /// Multiplying these values by the total volumetric density of residual fractures will give the total lengths of all residual fractures which nucleated in the specified zones and which are longer than the cutoffs
+        /// Multiplying these values by the total volumetric density of residual fractures will give the total lengths of all residual fractures which nucleated in the specified 
+        /// s and which are longer than the cutoffs
         /// </summary>
         /// <param name="FII_byDistance">Instantaneous probability of stress shadow interaction of the inward propagating fracture, divided by propagation rate</param>
         /// <param name="IntersectionAngle">Angle between the propagating fracture and the set it is propagating towards</param>

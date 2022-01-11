@@ -299,17 +299,6 @@ namespace BackStrip_SharedCode
         }
     }
 
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            int Filecount = System.IO.Directory.EnumerateFiles("C:\\Documents\\Kenni\\From Dropbox\\Drenthe").Count();
-
-            double NoFileLines = File.ReadAllLines("C:\\Documents\\Kenni\\From Dropbox\\Drenthe\\1").Length;
-            int ArraySize = (int)Math.Ceiling(Math.Sqrt(NoFileLines));
-
-
-        }
-    }
+    
 
 }

@@ -783,6 +783,11 @@ namespace DFNGenerator_Ocean
                         // Loop through all columns and rows in the Fracture Grid
                         // ColNo corresponds to the Petrel grid I index, RowNo corresponds to the Petrel grid J index, and LayerNo corresponds to the Petrel grid K index
                         progressBarWrapper.SetNumberOfElements(NoFractureGridCols * NoFractureGridRows);
+                        //ML
+                        double pointx = 1;
+                        double pointy = 1;
+                        double pointz = 1;
+                        //ML
                         for (int FractureGrid_ColNo = 0; FractureGrid_ColNo < NoFractureGridCols; FractureGrid_ColNo++)
                         {
                             for (int FractureGrid_RowNo = 0; FractureGrid_RowNo < NoFractureGridRows; FractureGrid_RowNo++)
@@ -812,6 +817,7 @@ namespace DFNGenerator_Ocean
                                 // Find SW cornerpoints; if the top or bottom cells in the SW corner are undefined, use the highest and lowest defined cells
                                 Index3 SW_top = new Index3(PetrelGrid_FirstCellI, PetrelGrid_FirstCellJ, PetrelGrid_TopCellK);
                                 Point3 SW_top_corner = PetrelGrid.GetPointAtCell(SW_top, Corner.SouthWest, TopOrBase.Top);
+
                                 // If the top cell is not defined, find the uppermost cell that is
                                 if (Point3.IsNull(SW_top_corner))
                                 {
@@ -840,6 +846,7 @@ namespace DFNGenerator_Ocean
                                 }
                                 // Create FractureGrid point corresponding to the SW Petrel gridblock corners
                                 PointXYZ FractureGrid_SWtop = new PointXYZ(SW_top_corner.X, SW_top_corner.Y, -SW_top_corner.Z);
+
                                 PointXYZ FractureGrid_SWbottom = new PointXYZ(SW_bottom_corner.X, SW_bottom_corner.Y, -SW_bottom_corner.Z);
                                 // Update mean depth and thickness variables
                                 local_Depth -= SW_top_corner.Z;
@@ -916,7 +923,11 @@ namespace DFNGenerator_Ocean
                                 // Update mean depth and thickness variables
                                 local_Depth -= NE_top_corner.Z;
                                 local_LayerThickness += (NE_top_corner.Z - NE_bottom_corner.Z);
-
+                                //ML
+                                pointx = SW_top_corner.X;
+                                pointy = SW_top_corner.Y;
+                                pointz = SW_top_corner.Z;
+                                //ML
                                 // Find SE cornerpoints; if the top or bottom cells in the SE corner are undefined, use the highest and lowest defined cells
                                 Index3 SE_top = new Index3(PetrelGrid_LastCellI, PetrelGrid_FirstCellJ, PetrelGrid_TopCellK);
                                 Point3 SE_top_corner = PetrelGrid.GetPointAtCell(SE_top, Corner.SouthEast, TopOrBase.Top);
@@ -1662,7 +1673,98 @@ namespace DFNGenerator_Ocean
                             PetrelLogger.InfoOutputWindow("Start calculating implicit data");
                             progressBar.SetProgressText("Calculating implicit data");
                             ModelGrid.CalculateAllFractureData(progressBarWrapper);
+                            //ML
+                            PetrelLogger.InfoOutputWindow("1");
+                            PetrelLogger.InfoOutputWindow(pointx.ToString());
+                            PetrelLogger.InfoOutputWindow(pointy.ToString());
+                            PetrelLogger.InfoOutputWindow(pointz.ToString());
+
+
+
+
+                            int h = 0;
+                            int counter = 0;
+                            Point3 grid_point_xyz;
+                            Index3 point_ijk;
+
+
+                            foreach (Horizon hhh in arguments.Argument_Grid.Horizons)
+                            {
+                                PetrelLogger.InfoOutputWindow("2");
+                                PetrelLogger.InfoOutputWindow("Name: " + hhh.Name + " K: " + hhh.K + "Is main: " + hhh.IsMain.ToString() + "Type: " + hhh.HorizonType.ToString());
+                                h = hhh.K;
+
+                                for (int FractureGrid_I = 0; FractureGrid_I < NoFractureGridCols; FractureGrid_I++)
+                                {
+                                    for (int FractureGrid_J = 0; FractureGrid_J < NoFractureGridRows; FractureGrid_J++)
+                                    {
+
+                                        //for (int FractureGrid_I = 0; FractureGrid_I < maxI; FractureGrid_I++)
+                                        //{
+                                        //for (int FractureGrid_J = 0; FractureGrid_J < maxJ; FractureGrid_J++)
+                                        //{
+                                        counter++;
+                                        point_ijk = new Index3(FractureGrid_I, FractureGrid_J, hhh.K);
+
+                                        //PointXYZ FractureGrid_NEtop = new PointXYZ(NE_top_corner.X, NE_top_corner.Y, -NE_top_corner.Z);
+                                        grid_point_xyz = PetrelGrid.GetPointAtCell(point_ijk, Corner.SouthWest, TopOrBase.Top);
+                                        PetrelLogger.InfoOutputWindow(grid_point_xyz.X.ToString());
+                                        PetrelLogger.InfoOutputWindow(grid_point_xyz.Y.ToString());
+                                        PetrelLogger.InfoOutputWindow(grid_point_xyz.Z.ToString());
+
+                                    }
+                                }
+
+                                PetrelLogger.InfoOutputWindow(counter.ToString());
+                                counter = 0;
+
+                                //arguments.Argument_Grid.Horizons
+                            }
+
+
+                            //Horizon hhh in arguments.Argument_Grid.Horizons;
+
+                            PetrelLogger.InfoOutputWindow(h.ToString());
+                            PetrelLogger.InfoOutputWindow("3");
+
+
                         }
+
+                        /*
+                        
+                        int counter = 0;
+                        for (int FractureGrid_I = 0; FractureGrid_I < maxI; FractureGrid_I++)
+                        {
+                            for (int FractureGrid_J = 0; FractureGrid_J < maxJ; FractureGrid_J++)
+                            {
+                                counter++;
+                                SW_top = new Index3(FractureGrid_I, FractureGrid_J, 1);
+                                
+                                //PointXYZ FractureGrid_NEtop = new PointXYZ(NE_top_corner.X, NE_top_corner.Y, -NE_top_corner.Z);
+                                grid_point_xyz = PetrelGrid.GetPointAtCell(SW_top, Corner.SouthWest, TopOrBase.Top);
+                                PetrelLogger.InfoOutputWindow(grid_point_xyz.X.ToString());
+                                PetrelLogger.InfoOutputWindow(grid_point_xyz.Y.ToString());
+                                PetrelLogger.InfoOutputWindow(grid_point_xyz.Z.ToString());
+
+                            }
+                        }
+                        */
+                        //PetrelLogger.InfoOutputWindow(counter.ToString());
+
+                        //class Program
+                        //{
+                        //static void Main(string[] args)
+                        //{
+                        int Filecount = System.IO.Directory.EnumerateFiles("C:\\Documents\\Kenni\\From Dropbox\\Drenthe").Count();
+
+                        double NoFileLines = File.ReadAllLines("C:\\Documents\\Kenni\\From Dropbox\\Drenthe\\1").Length;
+                        int ArraySize = (int)Math.Ceiling(Math.Sqrt(NoFileLines));
+
+
+                        //}
+                        //}
+                        //ML
+
 
                         // Calculate explicit DFN - unless the calculation has already been cancelled
                         if (!progressBarWrapper.abortCalculation())
@@ -2904,7 +3006,7 @@ namespace DFNGenerator_Ocean
         {
             public Arguments()
                 : this(DataManager.DataSourceManager)
-            {                
+            {
             }
 
             public Arguments(IDataSourceManager dataSourceManager)
@@ -3659,7 +3761,7 @@ namespace DFNGenerator_Ocean
         public string Text
         {
             get { return Description.Name; }
-            private set 
+            private set
             {
                 // TODO: implement set
                 this.RaiseTextChanged();
@@ -3676,7 +3778,7 @@ namespace DFNGenerator_Ocean
         public System.Drawing.Bitmap Image
         {
             get { return PetrelImages.Modules; }
-            private set 
+            private set
             {
                 // TODO: implement set
                 this.RaiseImageChanged();
@@ -3703,7 +3805,7 @@ namespace DFNGenerator_Ocean
             /// <summary>
             /// Contains the singleton instance.
             /// </summary>
-            private  static DFNGeneratorDescription instance = new DFNGeneratorDescription();
+            private static DFNGeneratorDescription instance = new DFNGeneratorDescription();
             /// <summary>
             /// Gets the singleton instance of this Description class
             /// </summary>
