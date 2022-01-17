@@ -1755,10 +1755,820 @@ namespace DFNGenerator_Ocean
                         //{
                         //static void Main(string[] args)
                         //{
-                        int Filecount = System.IO.Directory.EnumerateFiles("C:\\Documents\\Kenni\\From Dropbox\\Drenthe").Count();
+
+
+
+
+                        int N;
+
+                        int count = System.IO.Directory.EnumerateFiles("C:\\Documents\\Kenni\\From Dropbox\\Drenthe").Count();
 
                         double NoFileLines = File.ReadAllLines("C:\\Documents\\Kenni\\From Dropbox\\Drenthe\\1").Length;
                         int ArraySize = (int)Math.Ceiling(Math.Sqrt(NoFileLines));
+
+                        double[,] raw_data_input = new double[(int)NoFileLines, 3]; //needs to be same size as Nx Ny
+
+                        int Nhorsraw = count + 1; //this is the number of files + one
+                        int sublayers_hors = 2;   //no. of sublayers per horizont. Can be non-equal but must then be hard coded for now.
+                        int Nhorsfine = (count * sublayers_hors) + 1;
+
+                        //var sublayers = new int[9] { 1, 8, 8, 8, 8, 8, 8, 8, 8 };
+
+                        int[] sublayers = new int[Nhorsfine];
+                        //var sublayers = new int[5] { 1, 2, 2, 2, 2 }; //to be changed
+                        for (int i = 0; i < Nhorsraw; i++)
+                        {
+                            if (i == 0)
+                                sublayers[0] = 1;
+                            else
+                                sublayers[i] = 2;
+                        }
+                        //var modeltypesraw = new int[9] { 3, 3, 3, 3, 3, 3, 3, 3, 3 }; //to be changed
+                        int[] modeltypesraw = new int[Nhorsraw];
+                        for (int i = 0; i < Nhorsraw; i++)
+                            modeltypesraw[i] = 3;
+
+
+                        int length_of_sublayers = Nhorsfine;
+                        int Nv = 0;
+                        for (int i = 0; i < length_of_sublayers; i++)
+                            Nv = Nv + sublayers[i];
+
+                        double[] subdivisionlayer = new double[Nv];
+                        for (int i = 0; i < Nv; i++)
+                        {
+                            subdivisionlayer[i] = 0;
+                        }
+
+                        double phi0_sd = 0.54;
+                        double phi0_sh = 0.65;
+
+                        double[] phics_sddraw = new double[Nhorsraw];
+
+                        for (int i = 0; i < Nhorsraw; i++)
+                        {
+                            phics_sddraw[i] = 0.45;
+                        }
+
+                        float dy = 0;
+                        float dx = 0;
+                        double[] agesraw = new double[Nhorsraw];
+
+                        for (int i = 0; i < Nhorsraw; i++)
+                        {
+                            agesraw[i] = Nhorsraw - i;
+                        }
+                        int Ny = 0;
+                        int Nx = 0;
+
+                        double[,] bottomhist = new double[Nhorsfine, Nhorsfine];
+
+                        var x = new List<float>();
+                        var y = new List<float>();
+
+                        int Nv_50 = 9;
+                        double[] agesfine = new double[Nhorsfine];
+
+                        double[] hors1dfine = new double[Nhorsfine];
+
+
+                        for (int i_counter = 0; i_counter < Nhorsfine; i_counter++)
+                        {
+                            agesfine[i_counter] = 0;
+                            hors1dfine[i_counter] = 0;
+                        }
+
+                        double[,] grid = new double[ArraySize, ArraySize];
+
+                        for (int counter_x = 0; counter_x < ArraySize; counter_x++)
+                        {
+                            for (int counter_y = 0; counter_y < ArraySize; counter_y++)
+                            {
+                                grid[counter_x, counter_y] = 1;
+                            }
+                        }
+
+                        double[,,] horsraw = new double[ArraySize, ArraySize, Nhorsraw]; //needs to be same size as Nx Ny
+                        double[,,] horsrawi = new double[ArraySize, ArraySize, Nhorsraw]; //needs to be same size as Nx Ny
+
+
+
+                        //reads the input files
+
+                        //string folderpath = @"C:\Users\rfo\Desktop\MM\VM DB\nv - master\nvd";
+                        //var fixedfolderpath = Environment.ExpandEnvironmentVariables(folderpath);
+                        string[] filesnumber = Directory.GetFiles("C:\\Documents\\Kenni\\From Dropbox\\Drenthe");
+                        int jj = 0;
+                        foreach (string filename in filesnumber)
+                        {
+                            var data = System.IO.File.ReadAllText(filename);
+                            //for (int j = 0; j < Nhorsraw-1; j++)
+                            //{
+                            //                var data = System.IO.File.ReadAllText(@"C:\Documents\Kenni\From Dropbox\Drenthe\1"); 
+
+                            // Create a new List of float[]
+                            var arrays = new List<float[]>();
+                            var mx = new List<float>();
+                            var my = new List<float>();
+                            var mz = new List<float>();
+
+                            // Split data file content into lines
+                            var lines = data.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries); //number of lines
+                            int linearraycount = 0; //to count the number of lines
+
+                            // Loop all lines
+                            foreach (var line in lines)
+                            {
+                                // Create a new List<float> representing all the commaseparated numbers in this line
+                                var lineArray = new List<float>();
+
+                                // Slipt line by , and loop through all the numeric valus
+                                foreach (var s in line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    // Add converted numeric value to our lineArray. The last part is needed since DK uses "." as 1000 separator
+                                    float flt1 = float.Parse(s, System.Globalization.CultureInfo.InvariantCulture);
+                                    lineArray.Add(flt1);
+                                }
+
+                                linearraycount++;
+
+                                // Add lineArray to main array
+                                arrays.Add(lineArray.ToArray());
+                            }
+
+                            // Loop repeats until there are noe more lines
+
+                            //Initialise xmin, xmax, ymin, ymax
+                            float xmin = Convert.ToUInt64(arrays[0][0]);
+                            float xmax = Convert.ToUInt64(arrays[0][0]);
+
+                            float ymin = Convert.ToUInt64(arrays[0][1]);
+                            float ymax = Convert.ToUInt64(arrays[0][1]);
+                            N = linearraycount;
+
+                            for (int i = 0; i < linearraycount; i++)
+                            {
+                                //Splits the data into x,y,z components
+                                mx.Add(Convert.ToUInt64(arrays[i][0]));
+                                my.Add(Convert.ToUInt64(arrays[i][1]));
+                                mz.Add((arrays[i][2]));
+
+                            }
+
+                            for (int i = 0; i < linearraycount; i++)
+                            {
+                                raw_data_input[i, 0] = mx[i];
+                                raw_data_input[i, 1] = my[i];
+                                raw_data_input[i, 2] = mz[i];
+                            }
+
+                            if (jj == 0)
+                            {
+                                int counter = 0;
+
+                                for (int i = 0; i < linearraycount; i++)
+                                {
+                                    //finds xmin
+                                    if (Convert.ToUInt64(arrays[i][0]) < xmin)
+                                        xmin = Convert.ToUInt64(arrays[i][0]);
+
+                                    //finds xmax
+                                    if (Convert.ToUInt64(arrays[i][0]) > xmax)
+                                        xmax = Convert.ToUInt64(arrays[i][0]);
+
+                                    bool isDuplicate_x = false;
+
+                                    //finds unique x values
+                                    for (int kk = 0; kk < i; kk++)
+                                    {
+                                        if (mx[i] == mx[kk])
+                                        {
+                                            isDuplicate_x = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!isDuplicate_x)
+                                    {
+                                        x.Add(mx[i]);
+
+                                    }
+                                }
+
+                                for (int i = 0; i < linearraycount; i++)
+                                {
+                                    //finds xmin
+                                    if (Convert.ToUInt64(arrays[i][1]) < ymin)
+                                        ymin = Convert.ToUInt64(arrays[i][1]);
+
+                                    //finds xmax
+                                    if (Convert.ToUInt64(arrays[i][1]) > ymax)
+                                        ymax = Convert.ToUInt64(arrays[i][1]);
+
+                                    bool isDuplicate_y = false;
+
+                                    //finds unique x values
+                                    for (int kk = 0; kk < i; kk++)
+                                    {
+                                        if (my[i] == my[kk])
+                                        {
+                                            isDuplicate_y = true;
+                                            break;
+                                        }
+                                        counter = counter + 1;
+                                    }
+
+                                    if (!isDuplicate_y)
+                                    {
+                                        y.Add(my[i]);
+                                    }
+                                }
+
+                                //number of unique x and y values
+                                Nx = x.Count; //Is one to high?
+                                Ny = y.Count;
+
+                                //resolution
+                                dx = (xmax - xmin) / (Nx - 1);
+                                dy = (ymax - ymin) / (Ny - 1);
+                            }
+
+                            //Since int values are needed for the counters below
+                            int Nx_int = Convert.ToInt32(Nx);
+                            int Ny_int = Convert.ToInt32(Ny);
+
+                            if (Nx_int == 0)
+                                Console.WriteLine("Warning Nx not defined");
+                            if (Ny_int == 0)
+                                Console.WriteLine("Warning Ny not defined");
+
+                            //Create and initialize wih "0" grid
+                            for (int counter_x = 0; counter_x < Nx; counter_x++)
+                            {
+                                for (int counter_y = 0; counter_y < Ny; counter_y++)
+                                {
+                                    grid[counter_x, counter_y] = 0;
+                                }
+                            }
+
+                            float i_count;
+                            float j_count;
+                            float i_count_rounded;
+                            float j_count_rounded;
+
+                            for (int e = 0; e < N; e++)
+                            {
+                                i_count = (mx[e] - Convert.ToInt32(xmin)) / dx;
+                                j_count = (my[e] - Convert.ToInt32(ymin)) / dy;
+                                if ((Math.Abs(i_count - Math.Round(i_count, 0)) < 0.01) && (Math.Abs(j_count - Math.Round(j_count, 0))) < 0.01)
+                                {
+                                    i_count_rounded = (float)Math.Round(i_count, 0);
+                                    j_count_rounded = (float)Math.Round(j_count, 0);
+                                    grid[Convert.ToInt32(i_count_rounded), Convert.ToInt32(j_count_rounded)] = mz[e]; //linie: grid[round(i),round(j)] = mz[e]  
+                                }
+                            }
+
+                            //initialize horsraw and horsrawi 
+                            //double[,,] horsrawi = new double[200, 200, Nhorsraw]; //should be big enought in what ever case. Fy_c of Fx_c er begge 161
+                            for (int counter_x = 0; counter_x < Nx; counter_x++)
+                            {
+                                for (int counter_y = 0; counter_y < Ny; counter_y++)
+                                {
+                                    horsraw[counter_y, counter_x, jj] = grid[counter_y, counter_x]; //turned around so it fits with Matlab matrix numbering
+                                }
+                            }
+
+                            jj++;
+
+                        }
+
+                        for (int j = 0; j < Nhorsraw - 1; j++)
+                        {
+                            if (j < Nhorsraw)
+                            {
+                                for (int counter_x = 0; counter_x < Nx; counter_x++)
+                                {
+                                    for (int counter_y = 0; counter_y < Ny; counter_y++)
+                                    {
+                                        horsrawi[counter_x, counter_y, j + 1] = horsraw[counter_x, counter_y, j];
+                                    }
+                                }
+                            }
+                        }
+
+
+                        for (int counter_x = 0; counter_x < Nx; counter_x++)
+                        {
+                            for (int counter_y = 0; counter_y < Ny; counter_y++)
+                            {
+                                horsrawi[counter_x, counter_y, 0] = horsrawi[counter_x, counter_y, 1];
+                            }
+                        }
+
+
+                        var bsf = new Backstrip_functions();
+
+
+                        int lmin = 2;
+
+                        int lmax = Nv;
+
+                        int tmax = Nv - 1;
+
+                        double[,] datamapi = new double[Nx, Ny];
+                        for (int counter_1 = 0; counter_1 < Nx; counter_1++)
+                        {
+                            for (int counter_2 = 0; counter_2 < Ny; counter_2++)
+                            {
+                                datamapi[counter_1, counter_2] = 0;
+                            }
+                        }
+
+                        double[,] gooddata = new double[Nx, Ny];
+                        for (int counter_1 = 0; counter_1 < Nx; counter_1++)
+                        {
+                            for (int counter_2 = 0; counter_2 < Ny; counter_2++)
+                            {
+                                if (datamapi[counter_1, counter_2] == 0)
+                                    gooddata[counter_1, counter_2] = 1;
+                                else
+                                    gooddata[counter_1, counter_2] = 0;
+                            }
+                        }
+
+                        double[] phics_sdfine = new double[Nv];
+                        double[] phics_shfine = new double[Nv];
+                        double[] svsfine = new double[Nv];
+                        int[] modeltypesfine = new int[Nv];
+                        for (int icounter = 0; icounter < Nv; icounter++)
+                        {
+                            phics_sdfine[icounter] = 0.45;
+                            phics_shfine[icounter] = 0;
+                            svsfine[icounter] = 0.5;
+
+                            modeltypesfine[icounter] = modeltypesraw[0];
+                        }
+
+                        double[,,] F31s = new double[Nx, Ny, Nv - 1];
+                        double[,,] F32s = new double[Nx, Ny, Nv - 1];
+                        double[,,] F33s = new double[Nx, Ny, Nv - 1];
+                        double[,,] Faccs = new double[Nx, Ny, Nv - 1];
+
+                        for (int counter_1 = 0; counter_1 < Nx; counter_1++)
+                        {
+                            for (int counter_2 = 0; counter_2 < Ny; counter_2++)
+                            {
+                                for (int counter_3 = 0; counter_3 < Nv - 1; counter_3++)
+                                {
+                                    F31s[counter_1, counter_2, counter_3] = 0;
+                                    F32s[counter_1, counter_2, counter_3] = 0;
+                                    F33s[counter_1, counter_2, counter_3] = 0;
+                                    Faccs[counter_1, counter_2, counter_3] = 0;
+                                }
+                            }
+                        }
+
+                        double[,] bottomhist_E = new double[Nv, Nv];
+                        double[,] bottomhist_W = new double[Nv, Nv];
+                        double[,] bottomhist_N = new double[Nv, Nv];
+                        double[,] bottomhist_S = new double[Nv, Nv];
+                        double[,] bottomhist_C = new double[Nv, Nv];
+
+                        for (int counter_1 = 0; counter_1 < Nv; counter_1++)
+                        {
+                            for (int counter_2 = 0; counter_2 < Nv; counter_2++)
+                            {
+                                bottomhist_E[counter_1, counter_2] = 0;
+                                bottomhist_W[counter_1, counter_2] = 0;
+                                bottomhist_N[counter_1, counter_2] = 0;
+                                bottomhist_S[counter_1, counter_2] = 0;
+                                bottomhist_C[counter_1, counter_2] = 0;
+                            }
+                        }
+
+                        ///*
+                        double[,,] bottomhist_center = new double[Ny, Nv, Nv];
+                        double[,,] bottomhist_east = new double[Ny, Nv, Nv];
+                        double[,,] bottomhist_west = new double[Ny, Nv, Nv];
+
+                        for (int counter_1 = 0; counter_1 < Ny; counter_1++)
+                        {
+                            for (int counter_2 = 0; counter_2 < Nv; counter_2++)
+                            {
+                                for (int counter_3 = 0; counter_2 < Nv; counter_2++)
+                                {
+                                    bottomhist_center[counter_1, counter_2, counter_3] = 0;
+                                    bottomhist_east[counter_1, counter_2, counter_3] = 0;
+                                    bottomhist_west[counter_1, counter_2, counter_3] = 0;
+                                }
+                            }
+                        }
+
+                        double[] bottomhist_temp = new double[Nv];
+
+                        double jcenter;
+                        int print_counter = 0;
+                        int counter_bottomhist = 0;
+                        for (int i = 1; i < Nx - 1; i++)
+                        {
+                            //counter_F++;
+                            for (int j = 0; j < Ny; j++)
+                            {
+                                //Console.WriteLine(print_counter); Writes all the zeros
+                                if (i == 1)
+                                {
+                                    if (gooddata[i - 1, j] == 1)
+                                    {
+
+                                        hors1dfine = bsf.backstrip_refine_hors1dfine(hors1dfine, horsrawi, sublayers, i - 1, j, Nhorsraw);
+                                        agesfine = bsf.backstrip_refine_agesfine(agesfine, agesraw, sublayers, i - 1, j, Nhorsraw);
+                                        bottomhist = bsf.backstrip_refine(bottomhist, hors1dfine, Nv_50, phi0_sd, phi0_sh, phics_sdfine, phics_shfine, svsfine, modeltypesfine);
+
+                                        for (int kk = 0; kk < Nv; kk++)
+                                        {
+                                            for (int l = 0; l < Nv; l++)
+                                            {
+                                                bottomhist_west[j, kk, l] = bottomhist[kk, l];
+                                            }
+                                        }
+                                    }
+
+                                    if (gooddata[i, j] == 1)
+                                    {
+                                        hors1dfine = bsf.backstrip_refine_hors1dfine(hors1dfine, horsrawi, sublayers, i, j, Nhorsraw);
+                                        agesfine = bsf.backstrip_refine_agesfine(agesfine, agesraw, sublayers, i, j, Nhorsraw);
+                                        bottomhist = bsf.backstrip_refine(bottomhist, hors1dfine, Nv_50, phi0_sd, phi0_sh, phics_sdfine, phics_shfine, svsfine, modeltypesfine);
+                                        for (int kk = 0; kk < Nv; kk++)
+                                        {
+                                            for (int l = 0; l < Nv; l++)
+                                            {
+                                                bottomhist_center[j, kk, l] = bottomhist[kk, l];
+
+                                            }
+                                        }
+                                    }
+
+                                }
+                                if (gooddata[i + 1, j] == 1)
+                                {
+                                    hors1dfine = bsf.backstrip_refine_hors1dfine(hors1dfine, horsrawi, sublayers, i + 1, j, Nhorsraw);
+                                    agesfine = bsf.backstrip_refine_agesfine(agesfine, agesraw, sublayers, i + 1, j, Nhorsraw);
+                                    bottomhist = bsf.backstrip_refine(bottomhist, hors1dfine, Nv_50, phi0_sd, phi0_sh, phics_sdfine, phics_shfine, svsfine, modeltypesfine);
+                                    for (int kk = 0; kk < Nv; kk++)
+                                    {
+                                        for (int l = 0; l < Nv; l++)
+                                        {
+                                            bottomhist_east[j, kk, l] = bottomhist[kk, l];
+
+                                        }
+                                    }
+                                }
+                            }
+
+                            print_counter++;
+
+                            double Ny_double = Ny / 2;
+
+                            jcenter = Math.Round(Ny_double, 0);
+
+                            double[] F31_test = new double[Nv - 1];
+                            double[] F32_test = new double[Nv - 1];
+                            double[] F33_test = new double[Nv - 1];
+                            double[] Facc_test = new double[Nv - 1];
+                            for (int j = 1; j < Ny - 1; j++)
+                            {
+
+                                if (gooddata[i, j] == 1 && gooddata[i - 1, j] == 1)
+                                {
+                                    for (int kk = 0; kk < Nv; kk++)
+                                    {
+
+                                        for (int l = 0; l < Nv; l++)
+                                        {
+                                            bottomhist_E[kk, l] = bottomhist_east[j, kk, l];
+                                            bottomhist_W[kk, l] = bottomhist_west[j, kk, l];
+                                            bottomhist_C[kk, l] = bottomhist_center[j, kk, l];
+                                        }
+                                    }
+                                    for (int kk = 0; kk < Nv; kk++)
+                                    {
+
+                                        for (int l = 0; l < Nv; l++)
+                                        {
+                                            bottomhist_N[kk, l] = bottomhist_center[(j + 1), kk, l];
+                                            bottomhist_S[kk, l] = bottomhist_center[(j - 1), kk, l];
+                                        }
+                                    }
+                                    int hvad_er_i = i;
+                                    int hvad_er_j = j;
+
+                                    dx = x[i + 1] - x[i - 1];
+                                    dy = y[i + 1] - y[i - 1];
+
+                                    double[,] bottomhist_E_2 = new double[Nv, Nv];
+                                    double[,] bottomhist_W_2 = new double[Nv, Nv];
+                                    double[,] bottomhist_C_2 = new double[Nv, Nv];
+                                    double[,] bottomhist_N_2 = new double[Nv, Nv];
+                                    double[,] bottomhist_S_2 = new double[Nv, Nv];
+
+                                    for (int kk = 0; kk < Nv; kk++)
+                                    {
+                                        for (int l = 0; l < Nv; l++)
+                                        {
+                                            bottomhist_E_2[kk, l] = bottomhist_E[l, kk];
+                                            bottomhist_W_2[kk, l] = bottomhist_W[l, kk];
+                                            bottomhist_C_2[kk, l] = bottomhist_C[l, kk];
+                                            bottomhist_N_2[kk, l] = bottomhist_N[l, kk];
+                                            bottomhist_S_2[kk, l] = bottomhist_S[l, kk];
+                                        }
+                                    }
+
+                                    for (int kk = 0; kk < Nv; kk++)
+                                    {
+                                        for (int l = 0; l < Nv; l++)
+                                        {
+                                            bottomhist_E[kk, l] = 0;
+                                            bottomhist_W[kk, l] = 0;
+                                            bottomhist_C[kk, l] = 0;
+                                            bottomhist_N[kk, l] = 0;
+                                            bottomhist_S[kk, l] = 0;
+                                        }
+                                    }
+
+                                    for (int kk = 0; kk < Nv; kk++)
+                                    {
+                                        for (int l = 0; l < Nv; l++)
+                                        {
+                                            bottomhist_E[kk, l] = bottomhist_E_2[kk, l];
+                                            bottomhist_W[kk, l] = bottomhist_W_2[kk, l];
+                                            bottomhist_C[kk, l] = bottomhist_C_2[kk, l];
+                                            bottomhist_N[kk, l] = bottomhist_N_2[kk, l];
+                                            bottomhist_S[kk, l] = bottomhist_S_2[kk, l];
+                                        }
+                                    }
+
+                                    double array_position = bottomhist_W[1, 1];
+
+                                    double array_position_swap = bottomhist_W[1, 1];
+
+                                    F31_test = bsf.getstraincolumn3d1_F31(bottomhist_W, bottomhist_C, bottomhist_E, bottomhist_S, bottomhist_N, dx, dy, lmin, lmax, tmax, Nv);
+
+                                    F32_test = bsf.getstraincolumn3d1_F32(bottomhist_W, bottomhist_C, bottomhist_E, bottomhist_S, bottomhist_N, dx, dy, lmin, lmax, tmax, Nv);
+
+                                    F33_test = bsf.getstraincolumn3d1_F33(bottomhist_W, bottomhist_C, bottomhist_E, bottomhist_S, bottomhist_N, dx, dy, lmin, lmax, tmax, Nv);
+
+                                    Facc_test = bsf.getstraincolumn3d1_Facc(bottomhist_W, bottomhist_C, bottomhist_E, bottomhist_S, bottomhist_N, dx, dy, lmin, lmax, tmax, Nv);
+
+                                    for (int m = 0; m < Nv - 1; m++)
+                                    {
+                                        F31s[i, j, m] = F31_test[m];
+                                        //Console.WriteLine(F31_test[m]);
+                                        F32s[i, j, m] = F32_test[m];
+                                        //Console.WriteLine(F32_test[m]);
+                                        F33s[i, j, m] = F33_test[m];
+                                        //Console.WriteLine(F33_test[m]);
+                                        Faccs[i, j, m] = Facc_test[m];
+                                        //Console.WriteLine(Facc_test[m]);
+
+                                    }
+                                }
+                            }
+
+                            for (int j = 0; j < Ny; j++)
+                            {
+                                for (int kk = 0; kk < Nv; kk++)
+                                {
+                                    for (int l = 0; l < Nv; l++)
+                                    {
+                                        bottomhist_west[j, kk, l] = bottomhist_center[j, kk, l];
+                                        bottomhist_center[j, kk, l] = bottomhist_east[j, kk, l];
+                                    }
+                                }
+                            }
+                        }
+
+                        double[,,] strainMinAzi = new double[Nx, Ny, Nv];
+                        double[,,] strainMinMag = new double[Nx, Ny, Nv];
+                        double[,,] strainIntMag = new double[Nx, Ny, Nv];
+                        double[,,] strainMaxMag = new double[Nx, Ny, Nv];
+
+                        for (int i = 1; i < Nx - 1; i++)
+                        {
+                            for (int j = 1; i < Ny - 1; i++)
+                            {
+                                for (int k = 1; k < Nv - 1; k++)
+                                {
+                                    strainMinAzi[i, j, k] = 0;
+                                    strainMinMag[i, j, k] = 0;
+                                    strainIntMag[i, j, k] = 0;
+                                    strainMaxMag[i, j, k] = 0;
+                                }
+                            }
+                        }
+
+                        //Below is from matlab code from Kenni
+                        for (int i = 1; i < Nx - 1; i++)
+                        {
+                            for (int j = 1; i < Ny - 1; i++)
+                            {
+                                for (int k = 1; k < Nv - 1; k++)
+                                {
+                                    if (gooddata[i - 1, j] == 1)
+                                    {
+                                        QLNet.Matrix T_ijk;
+
+                                        T_ijk = new QLNet.Matrix(3, 3);
+
+                                        T_ijk[0, 0] = 1.0; T_ijk[0, 1] = 0.0; T_ijk[0, 2] = 0.0;
+                                        T_ijk[1, 0] = 0.0; T_ijk[1, 1] = 1.0; T_ijk[1, 2] = 0.0;
+                                        T_ijk[2, 0] = F31s[i, j, k]; T_ijk[2, 1] = F32s[i, j, k]; T_ijk[2, 2] = F33s[i, j, k];
+
+                                        QLNet.SVD svd1 = new QLNet.SVD(T_ijk);
+
+                                        QLNet.Matrix U1 = svd1.U();
+                                        QLNet.Matrix S1 = svd1.S();
+                                        QLNet.Matrix V1 = svd1.V();
+
+                                        QLNet.Matrix principaldir;
+                                        principaldir = new QLNet.Matrix(1, 3);
+                                        for (int l = 0; l < 3; l++)
+                                        {
+                                            principaldir[l] = U1[l, 2];
+                                        }
+
+                                        for (int l = 0; l < 3; l++)
+                                        {
+                                            principaldir[l] = principaldir[l] * Math.Sign(principaldir[2]);
+                                        }
+
+                                        principaldir[2] = 0;
+
+                                        double norm = 0;
+
+                                        for (int l = 0; l < 3; l++)
+                                        {
+                                            norm = norm + (principaldir[l] * principaldir[l]);
+                                        }
+
+                                        norm = Math.Sqrt(norm);
+
+                                        for (int l = 0; l < 3; l++)
+                                        {
+                                            principaldir[l] = principaldir[l] * (S1[2, 2] / norm);
+                                        }
+
+                                        double dX, dY;
+
+                                        dX = principaldir[0];
+                                        dY = principaldir[1];
+
+                                        strainMinAzi[i, j, k] = (Math.Atan(dX / dY)) * (180 / Math.PI);
+                                        strainMinMag[i, j, k] = S1[2, 2]; // S(3, 3) is minimum value of the principle components
+                                        strainIntMag[i, j, k] = S1[1, 1]; // S(2, 2) is intermediate value of the principle components
+                                        strainMaxMag[i, j, k] = S1[0, 0]; // S(1, 1) is maximum value of the principle components
+                                    }
+                                }
+                            }
+                        }
+
+                        //output Kenni/Simon Oldfield
+                        for (int i = 1; i < Nx - 1; i++)
+                        {
+                            for (int j = 1; i < Ny - 1; i++)
+                            {
+                                for (int k = 1; k < Nv - 1; k++)
+                                {
+                                    if ((i % 10) == 0) //only when using large datasets
+                                    {
+                                        Console.WriteLine(strainMinAzi[i, j, k]);
+                                        Console.WriteLine(strainMinMag[i, j, k]);
+                                        Console.WriteLine(strainIntMag[i, j, k]);
+                                        Console.WriteLine(strainMaxMag[i, j, k]);
+                                    }
+                                }
+                            }
+                        }
+
+                        //Below is from matlab code from Kenni/Simon Oldfield
+                        for (int i = 1; i < Nx - 1; i++)
+                        {
+                            for (int j = 1; i < Ny - 1; i++)
+                            {
+                                for (int k = 1; k < Nv - 1; k++)
+                                {
+                                    if (gooddata[i - 1, j] == 1)
+                                    {
+                                        QLNet.Matrix T_ijk;
+
+                                        T_ijk = new QLNet.Matrix(3, 3);
+
+                                        T_ijk[0, 0] = 0.0; T_ijk[0, 1] = 0.0; T_ijk[0, 2] = F31s[i, j, k] / 2;
+                                        T_ijk[1, 0] = 0.0; T_ijk[1, 1] = 0.0; T_ijk[1, 2] = F32s[i, j, k] / 2;
+                                        T_ijk[2, 0] = F31s[i, j, k] / 2; T_ijk[2, 1] = F32s[i, j, k] / 2; T_ijk[2, 2] = F33s[i, j, k];
+
+                                        QLNet.SVD svd1 = new QLNet.SVD(T_ijk);
+
+                                        QLNet.Matrix U1 = svd1.U();
+                                        QLNet.Matrix S1 = svd1.S();
+                                        QLNet.Matrix V1 = svd1.V();
+
+                                        QLNet.Matrix principaldir;
+                                        principaldir = new QLNet.Matrix(1, 3);
+                                        for (int l = 0; l < 3; l++)
+                                        {
+                                            principaldir[l] = U1[l, 2];
+                                        }
+
+                                        for (int l = 0; l < 3; l++)
+                                        {
+                                            principaldir[l] = principaldir[l] * Math.Sign(principaldir[2]);
+                                        }
+
+                                        principaldir[2] = 0;
+
+                                        //principaldir[0] = 3;
+                                        //principaldir[1] = 2;
+                                        //principaldir[2] = 2;
+
+
+                                        double norm = 0;
+
+                                        for (int l = 0; l < 3; l++)
+                                        {
+                                            norm = norm + (principaldir[l] * principaldir[l]);
+                                        }
+
+                                        norm = Math.Sqrt(norm);
+
+                                        for (int l = 0; l < 3; l++)
+                                        {
+                                            principaldir[l] = principaldir[l] * (S1[2, 2] / norm);
+                                        }
+
+                                        double dX, dY;
+
+                                        dX = principaldir[0];
+                                        dY = principaldir[1];
+
+                                        strainMinAzi[i, j, k] = (Math.Atan(dX / dY)) * (180 / Math.PI);
+                                        strainMinMag[i, j, k] = S1[2, 2]; // S(3, 3) is minimum value of the principle components
+                                        strainIntMag[i, j, k] = S1[1, 1]; // S(2, 2) is intermediate value of the principle components
+                                        strainMaxMag[i, j, k] = S1[0, 0]; // S(1, 1) is maximum value of the principle components
+
+
+                                    }
+                                }
+
+                                //End Kenni/Simon Oldfield
+
+                                /*string path = @"C:";
+                                if (!File.Exists(path))
+                                {   
+                                    File.Create(path);
+                                    TextWriter tw = new StreamWriter(path);
+                                    tw.WriteLine("The very first line!");
+                                    tw.Close();
+                                }
+
+                                else if (File.Exists(path))
+                                {
+                                    TextWriter tw = new StreamWriter(path);
+                                    tw.WriteLine("The next line!");
+                                    tw.Close();
+
+
+                                }
+                                */
+                            }
+                        }
+
+                        //output Kenni/Simon Oldfield
+                        for (int i = 1; i < Nx - 1; i++)
+                        {
+                            for (int j = 1; i < Ny - 1; i++)
+                            {
+                                for (int k = 1; k < Nv - 1; k++)
+                                {
+                                    if ((i % 10) == 0) //only when using large datasets
+                                    {
+                                        Console.WriteLine(strainMinAzi[i, j, k]);
+                                        Console.WriteLine(strainMinMag[i, j, k]);
+                                        Console.WriteLine(strainIntMag[i, j, k]);
+                                        Console.WriteLine(strainMaxMag[i, j, k]);
+                                    }
+                                }
+                            }
+                        }
+                        //output Kenni/Simon Oldfield
+                    
+                
+
+
+
+
+
+
+
 
 
                         //}
@@ -1881,6 +2691,10 @@ namespace DFNGenerator_Ocean
                                             uF_P32_tot.Name = "Microfracture_P32";
                                             Property MF_MeanLength = FracSetData.CreateProperty(LengthTemplate);
                                             MF_MeanLength.Name = "Mean_fracture_length";
+                                            //ML
+                                            Property Azi_output = FracSetData.CreateProperty(P30Template);
+                                            Azi_output.Name = "Azi_calculated";
+                                            //ML
 
                                             // Loop through all columns and rows in the Fracture Grid
                                             // ColNo corresponds to the Petrel grid I index, RowNo corresponds to the Petrel grid J index, and LayerNo corresponds to the Petrel grid K index
@@ -1907,6 +2721,9 @@ namespace DFNGenerator_Ocean
 
                                                     // Get data from GridblockConfiguration object
                                                     double cell_MF_P30_tot, cell_MF_P32_tot, cell_uF_P32_tot, cell_MF_MeanLength;
+                                                    //ML
+                                                    double Azi_calculated;
+                                                    //ML
                                                     FractureDipSet fds = fractureGridCell.FractureSets[FractureSetNo].FractureDipSets[DipSetNo];
                                                     if (finalStage)
                                                     {
@@ -1949,6 +2766,9 @@ namespace DFNGenerator_Ocean
                                                                     MF_P32_tot[index_cell] = (float)cell_MF_P32_tot;
                                                                     uF_P32_tot[index_cell] = (float)cell_uF_P32_tot;
                                                                     MF_MeanLength[index_cell] = (float)cell_MF_MeanLength;
+                                                                    //ML
+                                                                    Azi_output[index_cell] = (float)Azi_calculated;
+                                                                    //ML
                                                                 } // End loop through all the Petrel cells in the gridblock
                                                     }
                                                     catch (Exception e)

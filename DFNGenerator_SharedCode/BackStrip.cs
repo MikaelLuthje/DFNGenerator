@@ -1,11 +1,13 @@
 ﻿using System;
+//using LumenWorks.Framework.IO.Csv;
+using System.Data;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.IO;
 
-namespace BackStrip_SharedCode
+
+namespace DFNGenerator_SharedCode
 {
     class Backstrip_functions
     {
@@ -13,18 +15,312 @@ namespace BackStrip_SharedCode
         {
             return Convert.ToInt32(j * I + i);
         }
+
+        double getuz(double[] bottomhist, double t, double dint, int Nv)
+        {
+            double uzout = 0, uzabove, uzbelow, currenthor, abovehor, belowhor, dly;
+            double indmin, indmax, mid;
+
+            indmin = 1; indmax = t + 1;
+
+            while (indmax - indmin > 1)
+            {
+                double temp = 0.5 * (indmax + indmin);
+                mid = Math.Floor(temp);
+                int temp_to_IN = IN(mid - 1, t - 1, Nv);
+                currenthor = bottomhist[temp_to_IN];
+
+                if (currenthor > dint)
+                {
+                    indmin = mid;
+                }
+                else indmax = mid;
+            }
+
+            if (dint < bottomhist[IN(0, t - 1, Nv)])
+            {
+                abovehor = bottomhist[IN(indmax - 1, t - 1, Nv)];
+                belowhor = bottomhist[IN(indmin - 1, t - 1, Nv)];
+
+                if (Math.Abs(belowhor - abovehor) > 1e-5)
+                {
+                    dly = (dint - abovehor) / (belowhor - abovehor);
+                }
+                else dly = 0;
+
+                uzabove = bottomhist[IN(indmax - 1, t, Nv)] - bottomhist[IN(indmax - 1, t - 1, Nv)];
+                uzbelow = bottomhist[IN(indmin - 1, t, Nv)] - bottomhist[IN(indmin - 1, t - 1, Nv)];
+                uzout = uzabove * (1 - dly) + uzbelow * dly;
+            }
+
+            else uzout = bottomhist[IN(0, t, Nv)] - bottomhist[IN(0, t - 1, Nv)];
+            return uzout;
+
+        }
+        public double[] getstraincolumn3d1_F31(double[,] bottomhist_W, double[,] bottomhist_C, double[,] bottomhist_E, double[,] bottomhist_S, double[,] bottomhist_N, float dx, float dy, int lmin, int lmax, int tmax, int Nv)
+        {
+
+            double dint, dz, uzup, uzcenter, uzwest, uzeast, uzsouth, uznorth, Finc31, Finc32, Finc33, F31, F32, F33, Facc;
+            double[] F31out = new double[Nv - 1];
+
+            double[] rhs = new double[1];
+            double[] lhs = new double[3];
+
+            dz = 1e-3;
+
+            double[] bottomhistcenter = new double[Nv * Nv];
+            double[] bottomhistwest = new double[Nv * Nv];
+            double[] bottomhisteast = new double[Nv * Nv];
+            double[] bottomhistnorth = new double[Nv * Nv];
+            double[] bottomhistsouth = new double[Nv * Nv];
+            int iii = 0;
+            for (int ii = 0; ii < Nv; ii++)
+            {
+                for (int jj = 0; jj < Nv; jj++)
+                {
+                    bottomhistcenter[iii] = bottomhist_C[ii, jj];
+                    bottomhisteast[iii] = bottomhist_E[ii, jj];
+                    bottomhistwest[iii] = bottomhist_W[ii, jj];
+                    bottomhistnorth[iii] = bottomhist_N[ii, jj];
+                    bottomhistsouth[iii] = bottomhist_S[ii, jj];
+                    iii++;
+                }
+            }
+
+            for (int l = (int)lmin; l <= (int)lmax; l++)
+            {
+                F31 = 0.0; F32 = 0.0; F33 = 1.0; Facc = 1.0;
+
+                for (int t = l - 1; t <= tmax; t++)
+                {
+                    dint = bottomhist_C[t - 1, l - 1];
+
+                    int matrix_size = lmax * 9;
+
+                    dint = bottomhistcenter[IN(l - 1, t - 1, Nv)];
+
+                    uzcenter = getuz(bottomhistcenter, t, dint, Nv);
+                    uzup = getuz(bottomhistcenter, t, dint - dz, Nv);
+
+                    uzwest = getuz(bottomhistwest, t, dint, Nv);
+
+                    uzeast = getuz(bottomhisteast, t, dint, Nv);
+
+                    uzsouth = getuz(bottomhistsouth, t, dint, Nv);
+
+                    uznorth = getuz(bottomhistnorth, t, dint, Nv);
+
+                    Finc31 = (uzeast - uzwest) / dx; Finc32 = (uznorth - uzsouth) / dy; Finc33 = 1.0 + (uzcenter - uzup) / dz;
+
+                    F31 = Finc31 + Finc33 * F31;
+                    F32 = Finc32 + Finc33 * F32;
+                    F33 = Finc33 * F33;
+                }
+
+                F31out[l - lmin] = F31;
+            }
+
+            return F31out;
+        }
+
+        public double[] getstraincolumn3d1_F32(double[,] bottomhist_W, double[,] bottomhist_C, double[,] bottomhist_E, double[,] bottomhist_S, double[,] bottomhist_N, float dx, float dy, int lmin, int lmax, int tmax, int Nv)
+        {
+            double dint, dz, uzup, uzcenter, uzwest, uzeast, uzsouth, uznorth, Finc31, Finc32, Finc33, F31, F32, F33, Facc;
+            double[] F32out = new double[Nv - 1];
+
+            double[] rhs = new double[1];
+            double[] lhs = new double[3];
+
+            dz = 1e-3;
+
+            double[] bottomhistcenter = new double[Nv * Nv];
+            double[] bottomhistwest = new double[Nv * Nv];
+            double[] bottomhisteast = new double[Nv * Nv];
+            double[] bottomhistnorth = new double[Nv * Nv];
+            double[] bottomhistsouth = new double[Nv * Nv];
+            int iii = 0;
+            for (int ii = 0; ii < Nv; ii++)
+            {
+                for (int jj = 0; jj < Nv; jj++)
+                {
+                    bottomhistcenter[iii] = bottomhist_C[ii, jj];
+                    bottomhisteast[iii] = bottomhist_E[ii, jj];
+                    bottomhistwest[iii] = bottomhist_W[ii, jj];
+                    bottomhistnorth[iii] = bottomhist_N[ii, jj];
+                    bottomhistsouth[iii] = bottomhist_S[ii, jj];
+                    iii++;
+                }
+            }
+
+            for (int l = (int)lmin; l <= (int)lmax; l++)
+            {
+                F31 = 0.0; F32 = 0.0; F33 = 1.0; Facc = 1.0;
+
+                for (int t = l - 1; t <= tmax; t++)
+                {
+                    dint = bottomhist_C[t - 1, l - 1];
+
+                    int matrix_size = lmax * 9;
+
+                    dint = bottomhistcenter[IN(l - 1, t - 1, Nv)];
+
+                    uzcenter = getuz(bottomhistcenter, t, dint, Nv);
+                    uzup = getuz(bottomhistcenter, t, dint - dz, Nv);
+
+                    uzwest = getuz(bottomhistwest, t, dint, Nv);
+
+                    uzeast = getuz(bottomhisteast, t, dint, Nv);
+
+                    uzsouth = getuz(bottomhistsouth, t, dint, Nv);
+
+                    uznorth = getuz(bottomhistnorth, t, dint, Nv);
+
+                    Finc31 = (uzeast - uzwest) / dx;
+                    Finc32 = (uznorth - uzsouth) / dy;
+                    Finc33 = 1.0 + (uzcenter - uzup) / dz;
+
+                    F31 = Finc31 + Finc33 * F31;
+                    F32 = Finc32 + Finc33 * F32;
+                    F33 = Finc33 * F33;
+                }
+                F32out[l - lmin] = F32;
+
+            }
+            return F32out;
+        }
+
+        public double[] getstraincolumn3d1_F33(double[,] bottomhist_W, double[,] bottomhist_C, double[,] bottomhist_E, double[,] bottomhist_S, double[,] bottomhist_N, float dx, float dy, int lmin, int lmax, int tmax, int Nv)
+        {
+            double dint, dz, uzup, uzcenter, uzwest, uzeast, uzsouth, uznorth, Finc31, Finc32, Finc33, F31, F32, F33, Facc;
+            double[] F33out = new double[Nv - 1];
+
+            double[] rhs = new double[1];
+            double[] lhs = new double[3];
+
+            dz = 1e-3;
+
+            double[] bottomhistcenter = new double[Nv * Nv];
+            double[] bottomhistwest = new double[Nv * Nv];
+            double[] bottomhisteast = new double[Nv * Nv];
+            double[] bottomhistnorth = new double[Nv * Nv];
+            double[] bottomhistsouth = new double[Nv * Nv];
+            int iii = 0;
+            for (int ii = 0; ii < Nv; ii++)
+            {
+                for (int jj = 0; jj < Nv; jj++)
+                {
+                    bottomhistcenter[iii] = bottomhist_C[ii, jj];
+                    bottomhisteast[iii] = bottomhist_E[ii, jj];
+                    bottomhistwest[iii] = bottomhist_W[ii, jj];
+                    bottomhistnorth[iii] = bottomhist_N[ii, jj];
+                    bottomhistsouth[iii] = bottomhist_S[ii, jj];
+                    iii++;
+                }
+            }
+
+            for (int l = (int)lmin; l <= (int)lmax; l++)
+            {
+                F31 = 0.0; F32 = 0.0; F33 = 1.0; Facc = 1.0;
+
+                for (int t = l - 1; t <= tmax; t++)
+                {
+                    dint = bottomhist_C[t - 1, l - 1];
+
+                    int matrix_size = lmax * 9;
+
+                    dint = bottomhistcenter[IN(l - 1, t - 1, Nv)];
+
+                    uzcenter = getuz(bottomhistcenter, t, dint, Nv);
+                    uzup = getuz(bottomhistcenter, t, dint - dz, Nv);
+
+                    uzwest = getuz(bottomhistwest, t, dint, Nv);
+
+                    uzeast = getuz(bottomhisteast, t, dint, Nv);
+
+                    uzsouth = getuz(bottomhistsouth, t, dint, Nv);
+                    ;
+                    uznorth = getuz(bottomhistnorth, t, dint, Nv);
+
+                    Finc31 = (uzeast - uzwest) / dx;
+                    Finc32 = (uznorth - uzsouth) / dy;
+                    Finc33 = 1.0 + (uzcenter - uzup) / dz;
+
+                    F31 = Finc31 + Finc33 * F31;
+                    F32 = Finc32 + Finc33 * F32;
+                    F33 = Finc33 * F33;
+
+                }
+                F33out[l - lmin] = F33;
+
+            }
+            return F33out;
+        }
+
+        public double[] getstraincolumn3d1_Facc(double[,] bottomhist_W, double[,] bottomhist_C, double[,] bottomhist_E, double[,] bottomhist_S, double[,] bottomhist_N, float dx, float dy, int lmin, int lmax, int tmax, int Nv)
+        {
+            int t, l;
+            double dint, dz, uzup, uzcenter, uzwest, uzeast, uzsouth, uznorth, Finc31, Finc32, Finc33, F31, F32, F33, Facc;
+
+            double[] rhs = new double[1];
+            double[] lhs = new double[3];
+            double[] Faccout = new double[Nv - 1];
+
+            Facc = 0;
+
+            dz = 1e-3;
+            for (l = (int)lmin; l <= (int)lmax; l++)
+            {
+                F31 = 0.0; F32 = 0.0; F33 = 1.0; Facc = 1.0;
+
+                for (t = l - 1; t <= tmax; t++)
+                {
+                    dint = bottomhist_C[l - 1, t - 1];
+
+                    int matrix_size = Nv * Nv;
+                    double[] bottomhistcenter = new double[matrix_size];
+                    bottomhistcenter[IN(l - 1, t - 1, Nv)] = bottomhist_C[l - 1, t - 1];
+                    uzcenter = getuz(bottomhistcenter, t, dint, Nv);
+                    uzup = getuz(bottomhistcenter, t, dint - dz, Nv);
+
+                    double[] bottomhistwest = new double[matrix_size];
+                    bottomhistwest[IN(l - 1, t - 1, Nv)] = bottomhist_W[l - 1, t - 1];
+                    uzwest = getuz(bottomhistwest, t, dint, Nv);
+
+                    double[] bottomhisteast = new double[matrix_size];
+                    bottomhisteast[IN(l - 1, t - 1, Nv)] = bottomhist_E[l - 1, t - 1];
+                    uzeast = getuz(bottomhisteast, t, dint, Nv);
+
+                    double[] bottomhistsouth = new double[matrix_size];
+                    bottomhistsouth[IN(l - 1, t - 1, Nv)] = bottomhist_S[l - 1, t - 1];
+                    uzsouth = getuz(bottomhistsouth, t, dint, Nv);
+
+                    double[] bottomhistnorth = new double[matrix_size];
+                    bottomhistnorth[IN(l - 1, t - 1, Nv)] = bottomhist_N[l - 1, t - 1];
+                    uznorth = getuz(bottomhistnorth, t, dint, Nv);
+
+                    Finc31 = (uzeast - uzwest) / dx; Finc32 = (uznorth - uzsouth) / dy; Finc33 = 1.0 + (uzcenter - uzup) / dz;
+
+                    F31 = Finc31 + Finc33 * F31;
+                    F32 = Finc32 + Finc33 * F32;
+                    F33 = Finc33 * F33;
+                }
+
+                Faccout[l - lmin] = Facc;
+            }
+            return Faccout;
+        }
         public double[,] revil_backstrip(double[,] bottomhist, double[] bottoms, int Nv_50, double phi0_sd, double phi0_sh, double[] phics_sd, double[] phics_sh, double[] svs, int[] modeltypes)
         {
-            
+
             double beta_sd = 6e-8;
-            double beta_sh = 4e-8;
+            double beta_sh = 4e-8; //Values from Revil paper
             double rhog = 2650;
             double rhof = 1050;
             double g = 9.82;
 
             int Nl = bottoms.Length;
 
-            Nv_50 = 9;
+            Nv_50 = bottoms.Length;
             double[] layermasses = new double[Nv_50];
 
             for (int i = 0; i < Nv_50; i++)
@@ -32,7 +328,7 @@ namespace BackStrip_SharedCode
 
             int dznom = 10; //Nominal integration step. Decrease for higher precision.
             double z = 0;
-            int l = Nl; //to change
+            int l = Nl;
             double phi_sd = phi0_sd;
             double phi_sh = phi0_sh;
             double dz;
@@ -73,7 +369,9 @@ namespace BackStrip_SharedCode
 
                 localmass = localmass + (1 - phi_b) * dz;
 
+
                 double dsig = (rhog - rhof) * (1 - phi_b) * g * dz;
+                //Change in normal stress ('pressure') over dz
 
                 if (dsig > 0) //Find derivative of porosity with respect to normal stress (dphi_dsig)
                 {
@@ -171,9 +469,12 @@ namespace BackStrip_SharedCode
                     }
                     z = z + dz;
                 }
+
             }
             return bottomhist;
+
         }
+
         public double getbulkpor(double phi_sd, double phi_sh, double sv, double rhog, int mtype, double depth)
         {
             //mtype indicates model type. 0 is the revil model - 1-4 are from Sclater and Christie (1980): 1: Shale, 2: Sandstone, 3: Chalk, 4: Shaly sandstone
@@ -235,17 +536,18 @@ namespace BackStrip_SharedCode
             return phi_b;
         }
 
+
         public double[] backstrip_refine_hors1dfine(double[] hors1dfine, double[,,] horsrawi, int[] sublayers, int i, int j, int Nhorsraw)
         {
+
             int Nv = sublayers.Length;
             double rawtop = 0;
             double rawbot = 0;
             int hfine = 0;
             int bound;
 
-            double[,] bottomhist = new double[66, 66];
 
-            for (int h = 0; h < Nhorsraw; h++) 
+            for (int h = 0; h < Nhorsraw; h++)
             {
                 rawbot = horsrawi[i, j, h];
                 if (h < Nhorsraw - 1)
@@ -261,10 +563,14 @@ namespace BackStrip_SharedCode
                     hfine++;
                 }
             }
+
             return hors1dfine;
+
         }
+
         public double[] backstrip_refine_agesfine(double[] agesfine, double[] agesraw, int[] sublayers, int i, int j, int Nhorsraw)
         {
+
             double rawtop = 0;
             double rawbot = 0;
             int hfine = 0;
@@ -272,7 +578,7 @@ namespace BackStrip_SharedCode
 
             hfine = 0;
 
-            for (int h = 0; h < Nhorsraw; h++) 
+            for (int h = 0; h < Nhorsraw; h++)
             {
                 rawtop = agesraw[h];
                 if (h == 0)
@@ -290,15 +596,16 @@ namespace BackStrip_SharedCode
             }
 
             return agesfine;
+
         }
+
+
         public double[,] backstrip_refine(double[,] bottomhist, double[] hors1dfine, int Nv_50, double phi0_sd, double phi0_sh, double[] phics_sdfine, double[] phics_shfine, double[] svsfine, int[] modeltypesfine)
         {
+
             var bsf = new Backstrip_functions();
             bottomhist = (bsf.revil_backstrip(bottomhist, hors1dfine, Nv_50, phi0_sd, phi0_sh, phics_sdfine, phics_shfine, svsfine, modeltypesfine));
             return bottomhist;
         }
     }
-
-    
-
 }
