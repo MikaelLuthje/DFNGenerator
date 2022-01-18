@@ -35,6 +35,7 @@
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="packages.config" />
     <None Include="Readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -65,5 +66,10 @@ rmdir "$(ProjectDir)\obj\copytemp" /s /q
   <ItemGroup>
     <Content Include="DeployCopier.exe" />
     <Content Include="DeployList.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="QLNet, Version=1.11.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\QLNet.1.11.4\lib\netstandard2.0\QLNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

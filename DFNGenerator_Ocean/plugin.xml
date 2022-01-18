@@ -8,7 +8,7 @@
     <PluginUri>http://www.oilgas.dtu.dk/</PluginUri>
     <PluginId>://DFNGenerator_Ocean.DFNPlugin/2.0.0.0</PluginId>
     <Trust PublicKeyToken="">Default</Trust>
-    <ReleaseDate>2022-01-14</ReleaseDate>
+    <ReleaseDate>2022-01-17</ReleaseDate>
     <Author>Michael Welch and Mikael Lüthje</Author>
     <AppVersion>2017.0</AppVersion>
     <Modules>
@@ -16,6 +16,7 @@
     </Modules>
     <Assemblies>
       <Assembly Name="DFNGenerator_Ocean, Version=2.0.0.0, Culture=neutral, PublicKeyToken=null" />
+      <Assembly Name="QLNet, Version=1.11.4.0, Culture=neutral, PublicKeyToken=null" />
     </Assemblies>
     <assemblyBinding />
     <StartMode>Startup</StartMode>
