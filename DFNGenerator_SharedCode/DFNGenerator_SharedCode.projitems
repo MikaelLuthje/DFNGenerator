@@ -23,5 +23,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)ProgressReporter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)PropagationControl.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StressStrainState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Surface.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Surface_model.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)surface_point_data.cs" />
   </ItemGroup>
 </Project>

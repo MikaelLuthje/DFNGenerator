@@ -461,6 +461,28 @@ namespace DFNGenerator_Ocean
             Property droppedProperty = e.Data.GetData(typeof(object)) as Property;
             UpdatePropertyPresentationBox(droppedProperty, presentationBox_YoungsMod);
         }
+        private void dropTarget_grid_top_DragDrop(object sender, DragEventArgs e)
+        {
+            Property droppedProperty = e.Data.GetData(typeof(object)) as Property;
+            UpdatePropertyPresentationBox(droppedProperty, presentationBox_grid_top);
+        }
+
+        private void UpdatePropertyPresentationBox(Property droppedProperty, object presentationBox_grid_top)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void dropTarget_grid_mid_DragDrop(object sender, DragEventArgs e)
+        {
+            Property droppedProperty = e.Data.GetData(typeof(object)) as Property;
+            UpdatePropertyPresentationBox(droppedProperty, presentationBox_grid_mid);
+        }
+
+        private void dropTarget_grid_base_DragDrop(object sender, DragEventArgs e)
+        {
+            Property droppedProperty = e.Data.GetData(typeof(object)) as Property;
+            UpdatePropertyPresentationBox(droppedProperty, presentationBox_grid_base);
+        }
 
         private void dropTarget_PoissonsRatio_DragDrop(object sender, DragEventArgs e)
         {
