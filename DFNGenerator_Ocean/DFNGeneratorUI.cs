@@ -112,6 +112,9 @@ namespace DFNGenerator_Ocean
             UpdateTextBox(args.Argument_InitialStressRelaxation,textBox_InitialStressRelaxation);
             UpdateCheckBox(args.Argument_AverageStressStrainData, checkBox_AverageStressStrainData);
 
+            // Kenni
+           // UpdateComboBox(args.Argument_StressDistribution, comboBox_StressDistribution);
+
             // Outputs
             UpdateCheckBox(args.Argument_WriteImplicitDataFiles, checkBox_LogCalculation);
             UpdateCheckBox(args.Argument_WriteDFNFiles, checkBox_WriteDFNFiles);
@@ -484,6 +487,24 @@ namespace DFNGenerator_Ocean
             UpdatePropertyPresentationBox(droppedProperty, presentationBox_grid_base);
         }
 
+        private void dropTarget_TopHori_DragDrop(object sender, DragEventArgs e) //Kenni
+        { //Kenni
+            Property droppedProperty = e.Data.GetData(typeof(object)) as Property;//Kenni
+            UpdatePropertyPresentationBox(droppedProperty, presentationBox_TopHori);//Kenni
+        }//Kenni
+
+        private void dropTarget_MidHori_DragDrop(object sender, DragEventArgs e) //Kenni
+        { //Kenni
+            Property droppedProperty = e.Data.GetData(typeof(object)) as Property;//Kenni
+            UpdatePropertyPresentationBox(droppedProperty, presentationBox_MidHori);//Kenni
+        }//Kenni
+
+        private void dropTarget_BaseHori_DragDrop(object sender, DragEventArgs e) //Kenni
+        { //Kenni
+            Property droppedProperty = e.Data.GetData(typeof(object)) as Property;//Kenni
+            UpdatePropertyPresentationBox(droppedProperty, presentationBox_BaseHori);//Kenni
+        }//Kenni
+
         private void dropTarget_PoissonsRatio_DragDrop(object sender, DragEventArgs e)
         {
             Property droppedProperty = e.Data.GetData(typeof(object)) as Property;
@@ -583,7 +604,31 @@ namespace DFNGenerator_Ocean
             }
         }
 
-        private void presentationBox_PoissonsRatio_KeyDown(object sender, KeyEventArgs e)
+        private void presentationBox_TopHori_KeyDown(object sender, KeyEventArgs e) //Kenni
+        {//Kenni
+            if (e.KeyCode == Keys.Delete)//Kenni
+            {//Kenni
+                UpdatePropertyPresentationBox(Property.NullObject, presentationBox_TopHori);//Kenni
+                e.Handled = true;//Kenni
+            }//Kenni
+        }//Kenni        
+        private void presentationBox_MidHori_KeyDown(object sender, KeyEventArgs e) //Kenni
+        {//Kenni
+            if (e.KeyCode == Keys.Delete)//Kenni
+            {//Kenni
+                UpdatePropertyPresentationBox(Property.NullObject, presentationBox_MidHori);//Kenni
+                e.Handled = true;//Kenni
+            }//Kenni
+        }//Kenni        
+        private void presentationBox_BaseHori_KeyDown(object sender, KeyEventArgs e) //Kenni
+        {//Kenni
+            if (e.KeyCode == Keys.Delete)//Kenni
+            {//Kenni
+                UpdatePropertyPresentationBox(Property.NullObject, presentationBox_BaseHori);//Kenni
+                e.Handled = true;//Kenni
+            }//Kenni
+        }//Kenni
+private void presentationBox_PoissonsRatio_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Delete)
             {
