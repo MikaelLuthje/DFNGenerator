@@ -12,29 +12,27 @@ namespace DFNGenerator_SharedCode
         public float xmax { get; set; }
         public float ymin { get; set; }
         public float ymax { get; set; }
-
+        public float[] y { get; set; }
         public double[] hors1dfine { get; set; }
         public int Nx { get; set; }
-
         public double phi0_sd { get; set; }
         public double phi0_sh { get; set; }
-
         public int Ny { get; set; }
         public double[,] x_coordinates { get; set; }
         public double[,] y_coordinates { get; set; }
-
         public int[] sublayers { get; set; }
-
         public int NumberOfHorizon { get; set; }
-
         public double[,,] horsraw { get; set; }
         public double[,,] horsrawi { get; set; }
         public int NumberOfTimesteps { get; set; }
         public int NumberOfSurfaces { get; set; }
-
         public int no_hors_raw { get; set; }
-
         public List<Surface> surfaces { get; set; }
+        public int sublayers_hors { get; set;}
+        
+        //public List<float[]> arrays1 { get; set; }
+
+        //public List<float> y { get; set; }
 
         public void SetCoordinates()
         {
@@ -45,42 +43,70 @@ namespace DFNGenerator_SharedCode
         public void AddSurface()
         {
             Surface NewSurface = new Surface(NumberOfRows, NumberOfColumns);
-
             // code to set surface data, check position relative to other sufaces, etc
 
 
-            surfaces.Add(NewSurface);
+            //surfaces.Add(NewSurface);
         }
+
+        //public void SetParam()
+        //{
+        //    Para NewPara = new  
+        //    
+        //}
 
         private int subfunction()
         {
             return 1;
         }
 
-        private void copy_surface()
+        //public float find_y_max(float ymax, int file_length, List<float[]> arrays1, List<float> y)
+        public float find_y_max(float ymax, int file_length, List<float[]> arrays1)
         {
-            //copies data
-            for (int j = 0; j < NumberOfHorizon - 1; j++)
-            {
-                for (int counter_x = 0; counter_x < Nx; counter_x++)
-                {
-                    for (int counter_y = 0; counter_y < Ny; counter_y++)
-                    {
-                        horsrawi[counter_x, counter_y, j + 1] = horsraw[counter_x, counter_y, j];
+            ymax = Convert.ToUInt64(arrays1[0][1]);
 
+
+            var mx1 = new List<float>();
+            var my1 = new List<float>();
+            var mz1 = new List<float>();
+
+            for (int i = 0; i < file_length; i++)
+            {
+                //Splits the data into x,y,z components
+                mx1.Add(Convert.ToUInt64(arrays1[i][0]));
+                my1.Add(Convert.ToUInt64(arrays1[i][1]));
+                mz1.Add((arrays1[i][2]));
+            }
+
+            int 
+            for (int i = 0; i < file_length; i++)
+            {
+                //finds ymax
+                if (Convert.ToUInt64(arrays1[i][1]) > ymax)
+                    ymax = Convert.ToUInt64(arrays1[i][1]);
+
+                bool isDuplicate_x = false;
+
+                //finds unique x values
+                for (int k = 0; k < i; k++)
+                {
+                    if (mx1[i] == mx1[k])
+                    {
+                        isDuplicate_x = true;
+                        break;
                     }
                 }
-            }
 
-            //copies top row
-            for (int counter_x = 0; counter_x < Nx; counter_x++)
-            {
-                for (int counter_y = 0; counter_y < Ny; counter_y++)
+                if (!isDuplicate_x)
                 {
-                    horsrawi[counter_x, counter_y, 0] = horsrawi[counter_x, counter_y, 1];
+                    y.Add(my1[i]);
                 }
+
+
             }
+            return ymax;
         }
+
 
 
         public void Backstrip()
@@ -89,6 +115,8 @@ namespace DFNGenerator_SharedCode
             // code to do backstripping calculation 
 
             var bsf = new Backstrip_functions();
+
+            horsrawi = bsf.copy_surface(NumberOfHorizon, Nx, Ny, horsraw, horsrawi);
 
             for (int i = 1; i < Nx - 1; i++)
             {

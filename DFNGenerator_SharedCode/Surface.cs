@@ -27,4 +27,9 @@ namespace DFNGenerator_SharedCode
 
 
     }
+
+    //class SetPara
+    //{
+    //
+    //}
 }

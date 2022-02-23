@@ -17,14 +17,14 @@ namespace DFNGenerator_Standalone
             int NumberOfRow = 5;
             int NumberOfColumns = 5;
 
-            Surface_model Model = new Surface_model(NumberOfRow, NumberOfColumns);
 
+            Surface_model Model = new Surface_model(NumberOfRow, NumberOfColumns);
             //Model.xmin = 7;
 
             // code to read first surface to get file data.        and populate them with initial data
             int header_length = 20; //Hard coded for now (20) 
             int count = System.IO.Directory.EnumerateFiles("C:\\Documents\\Drenthe").Count(); //number of files in directory
-            Model.NumberOfRows = 2;
+            //Model.NumberOfRows = 2;
 
             var file = Directory.GetFiles(@"C:\\Documents\\Drenthe", "*.*")
             .FirstOrDefault(f => f != @"C:\\Documents\\Drenthe\1"); //loads first file in directory
@@ -43,7 +43,7 @@ namespace DFNGenerator_Standalone
             int count_row = 0; //number of rows    
 
             var x = new List<float>(); //x values
-            var y = new List<float>(); //y values
+            //var y = new List<float>(); //y values
             var arrays1 = new List<float[]>(); //input array first file
             var mx1 = new List<float>(); //input x, y, z values first file
             var my1 = new List<float>();
@@ -77,92 +77,25 @@ namespace DFNGenerator_Standalone
                 total_file_length++;
             }
 
+            //Surface_model;
+            //Surface_model Param = new SetParam();
+            //var bsf = new Surface_model();
 
-            Model.Backstrip();
 
+            //Model.Backstrip();
+            float ymax = 0;
+            //Model.find_y_max(ymax, file_length, arrays1, Model.y);
+            //Model.find_y_max(ymax, file_length, arrays1);
             // code to extract data from surface model and write it to file
 
             //Initialise xmin, xmax, ymin, ymax
-            Model.xmin = Convert.ToUInt64(arrays1[0][0]);
-
-            //float xmin;
-            //Surface_model xmin = new Surface_model(xmin);
-
-            //Surface_model
-            Model.xmax = Convert.ToUInt64(arrays1[0][0]);
-
-            Model.ymin = Convert.ToUInt64(arrays1[0][1]);
-            Model.ymax = Convert.ToUInt64(arrays1[0][1]);
-
-            //N = file_length;
-
-            for (int i = 0; i < file_length; i++)
-            {
-                //Splits the data into x,y,z components
-                mx1.Add(Convert.ToUInt64(arrays1[i][0]));
-                my1.Add(Convert.ToUInt64(arrays1[i][1]));
-                mz1.Add((arrays1[i][2]));
-            }
-
-            for (int i = 0; i < file_length; i++)
-            {
-                //finds xmin
-                if (Convert.ToUInt64(arrays1[i][0]) < Model.xmin)
-                    Model.xmin = Convert.ToUInt64(arrays1[i][0]);
-
-                //finds xmax
-                if (Convert.ToUInt64(arrays1[i][0]) > Model.xmax)
-                    Model.xmax = Convert.ToUInt64(arrays1[i][0]);
-
-                bool isDuplicate_x = false;
-
-                //finds unique x values
-                for (int k = 0; k < i; k++)
-                {
-                    if (mx1[i] == mx1[k])
-                    {
-                        isDuplicate_x = true;
-                        break;
-                    }
-                }
-
-                if (!isDuplicate_x)
-                {
-                    x.Add(mx1[i]);
-                }
-            }
-
-            for (int i = 0; i < file_length; i++)
-            {
-                //finds xmin
-                if (Convert.ToUInt64(arrays1[i][1]) < Model.ymin)
-                    Model.ymin = Convert.ToUInt64(arrays1[i][1]);
-
-                //finds xmax
-                if (Convert.ToUInt64(arrays1[i][1]) > Model.ymax)
-                    Model.ymax = Convert.ToUInt64(arrays1[i][1]);
-
-                bool isDuplicate_y = false;
-
-                //finds unique y values
-                for (int k = 0; k < i; k++)
-                {
-                    if (my1[i] == my1[k])
-                    {
-                        isDuplicate_y = true;
-                        break;
-                    }
-                }
-
-                if (!isDuplicate_y)
-                {
-                    y.Add(my1[i]);
-                }
-            }
 
             //number of unique x and y values
+
+            //find_y
+
             Model.Nx = x.Count;
-            Model.Ny = y.Count;
+            Model.Ny = Model.y.Count();
 
             //resolution
             dx = (Model.xmax - Model.xmin) / (Model.Nx - 1);
@@ -171,10 +104,10 @@ namespace DFNGenerator_Standalone
             double[,] raw_data_input = new double[(int)NoFileLines, 3]; //x,y,z input data for first file
 
             Model.no_hors_raw = count + 1; //number of files/horizons + one
-            int sublayers_hors = 2;   //no. of sublayers per horizont. Can be non-equal but must then be hard coded for now.
+            Model.sublayers_hors = 2;   //no. of sublayers per horizont. Can be non-equal but must then be hard coded for now.
             //int[] sublayers = new int[no_hors_raw]; //sublayers per horizon. Top layer is a dummy layer
 
-            var var_sublayers = new int[7] { 1, 2, 2, 2, 2, 2, 2 }; //to be changed
+            //var var_sublayers = new int[7] { 1, 2, 2, 2, 2, 2, 2 }; //to be changed
 
             //if var_sublayers not defined
             for (int i = 0; i < Model.no_hors_raw; i++)
@@ -182,7 +115,7 @@ namespace DFNGenerator_Standalone
                 if (i == 0)
                     Model.sublayers[0] = 1;
                 else
-                    Model.sublayers[i] = sublayers_hors;
+                    Model.sublayers[i] = Model.sublayers_hors;
             }
 
             //if var_sublayers defined
@@ -353,7 +286,12 @@ namespace DFNGenerator_Standalone
 
         }
 
-
+        //private class SetParam : Surface_model
+        //{
+            //public SetParam()
+            //{
+            //}
+        //}
     }
 
 

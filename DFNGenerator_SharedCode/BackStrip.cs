@@ -41,8 +41,38 @@ namespace DFNGenerator_SharedCode
             return hors1dfine;
         }
 
+        public double[,,] copy_surface(int NumberOfHorizon, int Nx, int Ny, double[,,] horsraw, double[,,] horsrawi)
+        {
+            //copies data
+            for (int j = 0; j < NumberOfHorizon - 1; j++)
+            {
+                for (int counter_x = 0; counter_x < Nx; counter_x++)
+                {
+                    for (int counter_y = 0; counter_y < Ny; counter_y++)
+                    {
+                        horsrawi[counter_x, counter_y, j + 1] = horsraw[counter_x, counter_y, j];
 
-        public double[] Sort_Input(double[,,] horsraw, int Nx, int Ny)
+                    }
+                }
+            }
+
+            //copies top row
+            for (int counter_x = 0; counter_x < Nx; counter_x++)
+            {
+                for (int counter_y = 0; counter_y < Ny; counter_y++)
+                {
+                    horsrawi[counter_x, counter_y, 0] = horsrawi[counter_x, counter_y, 1];
+                }
+            }
+
+            return horsrawi;
+
+
+        }
+
+
+        /*
+         * public double[] Sort_Input(double[,,] horsraw, int Nx, int Ny, int no_hors_raw)
         {
             //finds how the input data should be sorted so the deepest data is in top of the arrays
             Boolean isArrayEqual = false;
@@ -86,6 +116,192 @@ namespace DFNGenerator_SharedCode
                 if (random_count > 10)
                     break; random_count++; // increment
             }
+        }
+        */
+
+        public float find_y_min(float ymin, List<float[]> arrays1, int file_length, List<float> y)
+        {
+            ymin = Convert.ToUInt64(arrays1[0][1]);
+
+            var mx1 = new List<float>();
+            var my1 = new List<float>();
+            var mz1 = new List<float>();
+
+            for (int i = 0; i < file_length; i++)
+            {
+                //Splits the data into x,y,z components
+                mx1.Add(Convert.ToUInt64(arrays1[i][0]));
+                my1.Add(Convert.ToUInt64(arrays1[i][1]));
+                mz1.Add((arrays1[i][2]));
+            }
+
+
+            for (int i = 0; i < file_length; i++)
+            {
+                //finds ymin
+                if (Convert.ToUInt64(arrays1[i][1]) < ymin)
+                    ymin = Convert.ToUInt64(arrays1[i][1]);
+
+                bool isDuplicate_y = false;
+
+                //finds unique y values
+                for (int k = 0; k < i; k++)
+                {
+                    if (my1[i] == my1[k])
+                    {
+                        isDuplicate_y = true;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate_y)
+                {
+                    y.Add(my1[i]);
+                }
+
+
+            }
+
+            return ymin;
+        }
+
+
+        public float find_y_max(float ymax, List<float[]> arrays1, int file_length, List<float> y)
+        {
+            ymax = Convert.ToUInt64(arrays1[0][1]);
+
+
+            var mx1 = new List<float>();
+            var my1 = new List<float>();
+            var mz1 = new List<float>();
+
+            for (int i = 0; i < file_length; i++)
+            {
+                //Splits the data into x,y,z components
+                mx1.Add(Convert.ToUInt64(arrays1[i][0]));
+                my1.Add(Convert.ToUInt64(arrays1[i][1]));
+                mz1.Add((arrays1[i][2]));
+            }
+
+            for (int i = 0; i < file_length; i++)
+            {
+                //finds ymax
+                if (Convert.ToUInt64(arrays1[i][1]) > ymax)
+                    ymax = Convert.ToUInt64(arrays1[i][1]);
+
+                bool isDuplicate_x = false;
+
+                //finds unique x values
+                for (int k = 0; k < i; k++)
+                {
+                    if (mx1[i] == mx1[k])
+                    {
+                        isDuplicate_x = true;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate_x)
+                {
+                    y.Add(my1[i]);
+                }
+
+
+            }
+            return ymax;
+        }
+
+
+
+
+
+        public float find_x_max(float xmax, List<float[]> arrays1, int file_length, List<float> x)
+        {
+            xmax = Convert.ToUInt64(arrays1[0][0]);
+
+            var mx1 = new List<float>();
+            var my1 = new List<float>();
+            var mz1 = new List<float>();
+
+            for (int i = 0; i < file_length; i++)
+            {
+                //Splits the data into x,y,z components
+                mx1.Add(Convert.ToUInt64(arrays1[i][0]));
+                my1.Add(Convert.ToUInt64(arrays1[i][1]));
+                mz1.Add((arrays1[i][2]));
+            }
+
+            for (int i = 0; i < file_length; i++)
+            {
+                //finds xmax
+                if (Convert.ToUInt64(arrays1[i][0]) > xmax)
+                    xmax = Convert.ToUInt64(arrays1[i][0]);
+
+                bool isDuplicate_x = false;
+
+                //finds unique x values
+                for (int k = 0; k < i; k++)
+                {
+                    if (mx1[i] == mx1[k])
+                    {
+                        isDuplicate_x = true;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate_x)
+                {
+                    x.Add(mx1[i]);
+                }
+            }
+
+            return xmax;
+
+        }
+
+        public float find_x_min(float xmin, List<float[]> arrays1, int file_length, List<float> x)
+        {
+            xmin = Convert.ToUInt64(arrays1[0][0]);
+
+            var mx1 = new List<float>();
+            var my1 = new List<float>();
+            var mz1 = new List<float>();
+
+            for (int i = 0; i < file_length; i++)
+            {
+                //Splits the data into x,y,z components
+                mx1.Add(Convert.ToUInt64(arrays1[i][0]));
+                my1.Add(Convert.ToUInt64(arrays1[i][1]));
+                mz1.Add((arrays1[i][2]));
+            }
+
+            for (int i = 0; i < file_length; i++)
+            {
+                //finds xmin
+                if (Convert.ToUInt64(arrays1[i][0]) < xmin)
+                    xmin = Convert.ToUInt64(arrays1[i][0]);
+
+                bool isDuplicate_x = false;
+
+                //finds unique x values
+                for (int k = 0; k < i; k++)
+                {
+                    if (mx1[i] == mx1[k])
+                    {
+                        isDuplicate_x = true;
+                        break;
+                    }
+                }
+
+                if (!isDuplicate_x)
+                {
+                    x.Add(mx1[i]);
+                }
+
+
+            }
+            return xmin;
+
         }
 
     }
