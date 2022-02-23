@@ -29,10 +29,12 @@ namespace DFNGenerator_SharedCode
         public int no_hors_raw { get; set; }
         public List<Surface> surfaces { get; set; }
         public int sublayers_hors { get; set;}
-        
+
         //public List<float[]> arrays1 { get; set; }
 
         //public List<float> y { get; set; }
+
+        public float[] x { get; set; }
 
         public void SetCoordinates()
         {
@@ -78,7 +80,7 @@ namespace DFNGenerator_SharedCode
                 mz1.Add((arrays1[i][2]));
             }
 
-            int 
+            //int 
             for (int i = 0; i < file_length; i++)
             {
                 //finds ymax
@@ -99,7 +101,7 @@ namespace DFNGenerator_SharedCode
 
                 if (!isDuplicate_x)
                 {
-                    y.Add(my1[i]);
+                    //y.Add(my1[i]);
                 }
 
 
